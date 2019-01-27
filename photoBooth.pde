@@ -10,7 +10,7 @@ int imageSize = 50;
 
 void setup(){  
   size(900, 1000);
-  frameRate(200);
+  frameRate(100000);
   setupCamera();
   setupImage();
 }
