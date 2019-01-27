@@ -1,4 +1,5 @@
 import processing.video.*;
+import java.util.Collections;
 
 Capture cam;
 PImage image;
@@ -28,6 +29,7 @@ PGraphics images;
 PGraphics squares;
 PGraphics triggeredImages;
 PGraphics photoCanvas;
+PGraphics triggerCanvas;
 
 boolean firstFrame = true;
 
@@ -39,15 +41,19 @@ void setup(){
   triggeredImages = createGraphics(900, 1000);
   squares = createGraphics(900, 1000);
   photoCanvas = createGraphics(900, 1000);
+  triggerCanvas = createGraphics(900, 1000);
   
   frameRate(200);
    
   setupCamera();
-  for(int x = 0; x < width; x += rectWidth){
-     for(int y = 0; y < height; y+= rectHeight){
+  for(int x = 0; x < width; x += 100){
+     for(int y = 0; y < height; y+= 100){
         areaList.add(new Area(x,y,rectWidth, rectHeight)); 
      }
   }
+  
+  areaList = shuffle(areaList);
+  areaList = new ArrayList(areaList.subList(0, 20));
 
   
   currentColor = color(255,255,255); //<>//
@@ -62,7 +68,7 @@ void setupCamera(){
 }
 
 void draw(){
-
+  drawTriggerCanvas();
   checkAreas();
   drawSquares();
   drawPhotoCanvas();
@@ -74,8 +80,35 @@ void draw(){
     //images.background(255, 255, 255, 0);
     squares.background(125, 125,0, 0);
     photoCanvas.background(125, 125,0, 0);
+    triggerCanvas.background(125, 125,0, 0);
     //triggeredImages.background(255, 255, 255, 0);  
     firstFrame = false;
+  }
+}
+
+void drawTriggerCanvas(){
+   triggerCanvas.beginDraw();
+   for(int i = 0; i < areaList.size(); i++){
+     Area a = areaList.get(i);
+     triggerCanvas.noStroke();
+     drawGradient(triggerCanvas, a.x + 25, a.y + 25, color(16,125,172), color(24,154,211));
+     
+     //triggerCanvas.fill(color(37, 111, 249));
+     //triggerCanvas.ellipse(a.x + 25, a.y + 25, 50, 50);
+   }
+   triggerCanvas.endDraw();
+   image(triggerCanvas, 0, 0);
+}
+
+void drawGradient(PGraphics target, float x, float y, color from, color to) {
+  int radius = 25;
+  float h = random(0, 360);
+  color current = to;
+  for (int r = radius; r > 0; --r) {
+    target.fill(current);
+    target.ellipse(x, y, r, r);
+    h = (h + 1) % 360;
+    current = lerpColor(from, to, float(r)/float(radius));
   }
 }
 
@@ -228,7 +261,7 @@ color randomGausColor(color c){
 
   if(b>255){b=255;}
 
-  if(b<minValue){b=minValue;}
+  if(b<minValue +50){b=minValue + 50;}
   
   return color(r,g,b);
 }
@@ -323,6 +356,13 @@ int xInput(){
  return xInput;
 }
 
+ArrayList<Area> shuffle(ArrayList<Area> list){
+  Collections.shuffle(list);
+  Collections.shuffle(list);
+  Collections.shuffle(list);
+  return list;
+}
+
 public class Area
 {
   public int x, y;
@@ -361,8 +401,8 @@ public class Photo{
    PGraphics photo;
    color tintColor;
    
-   int imageWidth = 50;
-   int imageHeight = 50;
+   int imageWidth = 100;
+   int imageHeight = 100;
    
    public Photo(Capture cam, int x, int y, color tintColor){
       this.x = x;
@@ -381,7 +421,7 @@ public class Photo{
    
    public void drawImage(PGraphics targetGraphic){
        targetGraphic.tint(tintColor);
-       targetGraphic.image(photo, this.x, this.y);
+       targetGraphic.image(photo, this.x - imageWidth/4, this.y - imageHeight/4);
        //targetGraphic.rect(10,10,250,250);
    }
    
