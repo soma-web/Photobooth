@@ -217,28 +217,7 @@ void drawTriggeredImages(){
   image(triggeredImages, 0, 0);
 }
 
-/*
-void keyPressed(){
-   if( keyCode == UP){
-      saveFrame("shots/safe_" +millis()+".png");
-   }
-}
-*/
-
-
-float z;
-color shiftColor(color c){
-  float r = (c >> 16) & 0xFF;  // Faster way of getting red(argb)
-  float g = (c >> 8) & 0xFF;   // Faster way of getting green(argb)
-  float b = c & 0xFF;          // Faster way of getting blue(argb)
-   if( z > 1) z = 0; 
-  float t = noise(float(currentX)/float(width),float(currentY)/float(height), z) * 256;
-  print( t + "\n");
-  z += 0.06;
-  return color(t,255,255);
- 
-}
-
+///shfting the color in a naural way around blue to get a nice gradient
 color randomGausColor(color c){
   int minValue = 50;
   float r = (c >> 16) & 0xFF;  // Faster way of getting red(argb)
@@ -266,7 +245,7 @@ color randomGausColor(color c){
   return color(r,g,b);
 }
 
-
+///getting input
 void keyReleased() {
   if(keyCode == LEFT)
   {
@@ -329,6 +308,21 @@ void keyPressed()
   }
 }
 
+int yInput(){
+   int yInput = 0;
+   if(up) yInput += -1;
+   if(down) yInput += 1;
+   return yInput;
+}
+
+int xInput(){
+   int xInput = 0;
+   if(left) xInput += -1;
+   if(right) xInput += 1;
+   return xInput;
+}
+
+
 void saveComposition(){
    saveFrame("shots/safe_" +millis()+".png");
 }
@@ -342,20 +336,6 @@ void savePhotos(){
 
 }
 
-int yInput(){
-   int yInput = 0;
-   if(up) yInput += -1;
-   if(down) yInput += 1;
-   return yInput;
-}
-
-int xInput(){
- int xInput = 0;
- if(left) xInput += -1;
- if(right) xInput += 1;
- return xInput;
-}
-
 ArrayList<Area> shuffle(ArrayList<Area> list){
   Collections.shuffle(list);
   Collections.shuffle(list);
@@ -363,6 +343,9 @@ ArrayList<Area> shuffle(ArrayList<Area> list){
   return list;
 }
 
+
+
+///Area is used as a rect with intersectioncheks
 public class Area
 {
   public int x, y;
@@ -381,16 +364,10 @@ public class Area
   public boolean contains(int x, int y)
   {
     boolean conatins = false;
-    if((y >= this.y) && (y <= maxY) && (x >= this.x) && (x <= maxX)){
+    if((y >= this.y) && (y <= maxY) && (x >= this.x) && (x <= maxX))
+    {
       conatins = true;
     }
-    /*
-    if((x >= this.x) && (x <= maxX))
-      conatins = true;
-    
-    if((y >= this.y) && (y <= maxY))
-      conatins = true;
-      */
     return conatins;
   }
 }
@@ -417,12 +394,9 @@ public class Photo{
       photo.endDraw();
    }
    
-   
-   
    public void drawImage(PGraphics targetGraphic){
        targetGraphic.tint(tintColor);
        targetGraphic.image(photo, this.x - imageWidth/4, this.y - imageHeight/4);
        //targetGraphic.rect(10,10,250,250);
-   }
-   
+   }  
 }
