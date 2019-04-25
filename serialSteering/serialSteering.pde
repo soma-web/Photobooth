@@ -3,10 +3,10 @@ import processing.serial.*;
 Serial mySerial;
 boolean serailInitiliazied = false;
 
-int currentX = 10;
-int currentY = -10;
+float currentX = 10;
+float currentY = -10;
 
-int steeringSensitivity = 5;
+float steeringSensitivity = 0.001;
 
 boolean left;
 boolean right;
@@ -20,6 +20,7 @@ color strokeColor;
 int rectWidth = 55;
 int rectHeight = 55;
 
+
 void setup(){
    size(900, 1000);
    frameRate(200);
@@ -31,51 +32,17 @@ void setup(){
 }
 
 void draw()
-{
-  int xInput = xInput();
-  int yInput = yInput();
-  
+{  
+  SensorInput input = new SensorInput();
   while(mySerial.available() > 0){
-     String inBuffer = mySerial.readStringUntil('\n');
-     if(inBuffer != null){
-       println(inBuffer);
-        if(inBuffer.contains("Start?")){
-          mySerial.write(65);
-        }
-        
-        if(inBuffer.contains("DMP ready!")){
-           serailInitiliazied = true; 
-        }
-        
-        if(serailInitiliazied){
-          if(inBuffer.contains("{")){
-            JSONObject json = parseJSONObject(inBuffer);
-            if(json != null){
-               print(json.getFloat("x")); 
-               print(json.getFloat("y")); 
-               print(json.getFloat("z")); 
-               
-               xInput = (int)json.getFloat("y") * steeringSensitivity;
-               yInput = (int)json.getFloat("z") * steeringSensitivity;
-            }
-          }
-        }
-     }
-  }
-
-  //print(currentX + "\n");
-
-  currentX += xInput;
-  currentX = constrain(currentX, 0, width - rectWidth);
-  currentY += yInput;
-  currentY = constrain(currentY,0,height - rectHeight);
+     input = ReadSensorInput(mySerial); 
+  }  
   
-  strokeColor = randomGausColor(strokeColor);
-  stroke(strokeColor);
-  fill(strokeColor);
-   //print(strokeColor);
-  rect(currentX, currentY, rectWidth, rectHeight);
-  
+   if(input.success)
+   {
+     DrawPlayer(input.x, input.y, steeringSensitivity);  
+     input.success = false;
+   }
 }
 
 float z;
@@ -84,11 +51,10 @@ color shiftColor(color c){
   float g = (c >> 8) & 0xFF;   // Faster way of getting green(argb)
   float b = c & 0xFF;          // Faster way of getting blue(argb)
    if( z > 1) z = 0; 
-  float t = noise(float(currentX)/float(width),float(currentY)/float(height), z) * 256;
+  float t = noise(currentX/float(width),currentY/float(height), z) * 256;
   //print( t + "\n");
   z += 0.06;
   return color(t,255,255);
- 
 }
 
 color randomGausColor(color c){
@@ -116,6 +82,53 @@ color randomGausColor(color c){
   
   return color(r,g,b);
 }
+
+
+void DrawPlayer(float inputX, float inputY, float steeringSensitivity){
+  float moveX = inputX * steeringSensitivity;
+  float moveY = inputY * steeringSensitivity;
+  println("Move: " + moveX + ", " + moveY);
+
+  currentX += moveX;
+  currentX = constrain(currentX, 0, width - rectWidth);
+  currentY += moveY;
+  currentY = constrain(currentY,0,height - rectHeight);
+  
+  strokeColor = randomGausColor(strokeColor);
+  stroke(strokeColor);
+  fill(strokeColor);
+   //print(strokeColor);
+  rect(currentX, currentY, rectWidth, rectHeight);
+}
+
+SensorInput ReadSensorInput(Serial mySerial){
+   SensorInput input = new SensorInput();
+   String inBuffer = mySerial.readStringUntil('\n');
+   if(inBuffer != null){
+       //println(inBuffer);
+       
+     try{
+       JSONObject json = parseJSONObject(inBuffer);
+       if(json != null){
+         JSONArray accelerometerValues = json.getJSONArray("Accel");
+         JSONArray gyroscopeValues = json.getJSONArray("Gyro");
+         JSONObject angleValues = json.getJSONObject("Angle");
+         JSONArray usedValues = accelerometerValues;
+         
+         println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
+        
+             
+         input.x = (usedValues.getInt(1));
+         input.y = (usedValues.getInt(2));
+         input.success = true;
+       }
+     }catch(RuntimeException e){
+      print("errror"); 
+     }
+   }
+   return input;
+}
+
 
 
 void keyReleased() {
@@ -176,4 +189,14 @@ int xInput(){
  if(left) xInput += -1;
  if(right) xInput += 1;
  return xInput;
+}
+
+public class SensorInput{
+ public float x;
+ public float y;
+ public boolean success = false;
+ 
+ public SensorInput(){
+
+ }
 }
