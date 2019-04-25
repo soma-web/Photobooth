@@ -20,6 +20,7 @@ color strokeColor;
 int rectWidth = 55;
 int rectHeight = 55;
 
+SensorInput sensorInput = new SensorInput();
 
 void setup(){
    size(900, 1000);
@@ -29,19 +30,20 @@ void setup(){
    
    printArray(Serial.list());
    mySerial = new Serial(this, Serial.list()[1], 38400);
+   mySerial.bufferUntil(10);
+}
+
+void serialEvent(Serial s){  
+  sensorInput = ReadInput(s.readString());
 }
 
 void draw()
 {  
-  SensorInput input = new SensorInput();
-  while(mySerial.available() > 0){
-     input = ReadSensorInput(mySerial); 
-  }  
-  
-   if(input.success)
+   if(sensorInput != null)
    {
-     DrawPlayer(input.x, input.y, steeringSensitivity);  
-     input.success = false;
+     DrawPlayer(sensorInput.x, sensorInput.y, steeringSensitivity);  
+   }else{
+      println("no sensordata"); 
    }
 }
 
@@ -129,6 +131,35 @@ SensorInput ReadSensorInput(Serial mySerial){
    return input;
 }
 
+SensorInput ReadInput(String serialInput){
+   SensorInput input = new SensorInput();
+    if(serialInput != null){
+      println(serialInput);
+       
+     try{
+       JSONObject json = parseJSONObject(serialInput);
+       if(json != null){
+         JSONArray accelerometerValues = json.getJSONArray("Accel");
+         JSONArray gyroscopeValues = json.getJSONArray("Gyro");
+         JSONObject angleValues = json.getJSONObject("Angle");
+         JSONArray usedValues = accelerometerValues;
+         
+         println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
+        
+             
+         input.x = (usedValues.getInt(1));
+         input.y = (usedValues.getInt(2));
+         input.success = true;
+       }
+     }catch(RuntimeException e){
+      print("errror"); 
+     }
+   }else{
+    println("no input"); 
+   }
+   return input;
+}
+
 
 
 void keyReleased() {
@@ -198,5 +229,9 @@ public class SensorInput{
  
  public SensorInput(){
 
+ }
+ 
+ public void print(){
+    println("x: " + x + ", " + y);
  }
 }
