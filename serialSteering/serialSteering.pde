@@ -6,15 +6,17 @@ boolean serailInitiliazied = false;
 float currentX = 10;
 float currentY = -10;
 
-float steeringSensitivity = 0.001;
+float steeringSensitivity = 0.0005;
 
 boolean left;
 boolean right;
 boolean up;
 boolean down;
 
-
-
+int yOffset;
+int xOffset;
+int yDead = 2000;
+int xDead = 2000;
 color strokeColor;
 
 int rectWidth = 55;
@@ -24,6 +26,9 @@ SensorInput sensorInput = new SensorInput();
 
 void setup(){
    size(900, 1000);
+   currentX = width/2 - rectWidth/2;
+   currentY = height/2 - rectHeight/2;
+   
    frameRate(200);
    background(color(255,255, 255));
    strokeColor = color(255,255,255);
@@ -87,8 +92,22 @@ color randomGausColor(color c){
 
 
 void DrawPlayer(float inputX, float inputY, float steeringSensitivity){
-  float moveX = inputX * steeringSensitivity;
-  float moveY = inputY * steeringSensitivity;
+  float moveX = 0;
+  float moveY = 0;
+  
+  float tmpInputX = (inputX + xOffset);
+  float tmpInputY = (inputY + yOffset);
+  println(inputY + " " + yOffset + " " + tmpInputY); 
+  if(abs(tmpInputX) > xDead){
+    moveX = -1 * tmpInputX * steeringSensitivity;
+  }
+  
+  if(abs(tmpInputY) > yDead){
+     moveY =  tmpInputY * steeringSensitivity;
+  }
+  
+  //float moveX = (inputX + xOffset) * steeringSensitivity;
+  //float moveY = (inputY + yOffset) * steeringSensitivity;
   println("Move: " + moveX + ", " + moveY);
 
   currentX += moveX;
@@ -117,7 +136,7 @@ SensorInput ReadSensorInput(Serial mySerial){
          JSONObject angleValues = json.getJSONObject("Angle");
          JSONArray usedValues = accelerometerValues;
          
-         println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
+         //println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
         
              
          input.x = (usedValues.getInt(1));
@@ -134,7 +153,7 @@ SensorInput ReadSensorInput(Serial mySerial){
 SensorInput ReadInput(String serialInput){
    SensorInput input = new SensorInput();
     if(serialInput != null){
-      println(serialInput);
+      //println(serialInput);
        
      try{
        JSONObject json = parseJSONObject(serialInput);
@@ -144,7 +163,7 @@ SensorInput ReadInput(String serialInput){
          JSONObject angleValues = json.getJSONObject("Angle");
          JSONArray usedValues = accelerometerValues;
          
-         println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
+         //println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
         
              
          input.x = (usedValues.getInt(1));
@@ -206,6 +225,18 @@ void keyPressed()
   {
      right = true;
   }
+  
+  if(keyCode == CONTROL)
+  {
+    CalibrateJoystick();  
+  }
+}
+
+void CalibrateJoystick()
+{
+  println("Calibrating Joystick");
+  xOffset = -1 * (int)sensorInput.x;
+  yOffset = -1 * (int)sensorInput.y;
 }
 
 int yInput(){
