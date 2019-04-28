@@ -1,8 +1,16 @@
 import processing.video.*;
+import java.util.Arrays; 
 import java.util.Collections;
+import beads.*;
+
 
 Capture cam;
 PImage image;
+
+AudioContext ac;
+Glide carrierFreq, modFreqRatio;
+color fore = color(255, 102, 204);
+color back = color(0,0,0);
 
 int x = 0;
 int y = 0;
@@ -46,6 +54,8 @@ void setup(){
   frameRate(200);
    
   setupCamera();
+  setupAudio();
+  
   for(int x = 0; x < width; x += 100){
      for(int y = 0; y < height; y+= 100){
         areaList.add(new Area(x,y,rectWidth, rectHeight)); 
@@ -60,6 +70,31 @@ void setup(){
   background(color(255,255, 255));
 }
 
+void setupAudio(){ 
+  ac = new AudioContext();
+  /*
+   * This is a copy of Lesson 3 with some mouse control.
+   */
+   //this time we use the Glide object because it smooths the mouse input.
+  carrierFreq = new Glide(ac, 500);
+  modFreqRatio = new Glide(ac, 1);
+  Function modFreq = new Function(carrierFreq, modFreqRatio) {
+    public float calculate() {
+      return x[0] * x[1];
+    }
+  };
+  WavePlayer freqModulator = new WavePlayer(ac, modFreq, Buffer.SINE);
+  Function carrierMod = new Function(freqModulator, carrierFreq) {
+    public float calculate() {
+      return x[0] * 400.0 + x[1];    
+    }
+  };
+  WavePlayer wp = new WavePlayer(ac, carrierMod, Buffer.SINE);
+  Gain g = new Gain(ac, 1, 0.1);
+  g.addInput(wp);
+  ac.out.addInput(g);
+  ac.start(); 
+}
 
 
 void setupCamera(){
@@ -74,7 +109,9 @@ void draw(){
   drawPhotoCanvas();
   
   //drawImages();
-  //drawTriggeredImages();
+  drawTriggeredImages();
+  
+  makeSound(300.0,300.0);
   
   if(firstFrame){
     //images.background(255, 255, 255, 0);
@@ -84,6 +121,12 @@ void draw(){
     //triggeredImages.background(255, 255, 255, 0);  
     firstFrame = false;
   }
+}
+
+void makeSound(float inputX, float inputY){
+  //mouse listening code here
+  carrierFreq.setValue((float)inputX / width * 1000 + 50);
+  modFreqRatio.setValue((1 - (float)inputY / height) * 10 + 0.1);
 }
 
 void drawTriggerCanvas(){
@@ -134,7 +177,7 @@ void drawPhotoCanvas()
   photoCanvas.beginDraw();
   if(keyCode == TAB){
     print("triggerered");
-      Photo img = new Photo( cam,  currentX,  currentY,  color(125,125,125));
+      Photo img = new Photo( cam,  currentX,  currentY,  color(110, 85, 240));
       photoList.add(img);
   }
   
@@ -152,6 +195,7 @@ void drawSquares(){
   
    
   int xInput = xInput();
+  
   int yInput = yInput();
   
   currentX += xInput;
@@ -310,15 +354,15 @@ void keyPressed()
 
 int yInput(){
    int yInput = 0;
-   if(up) yInput += -1;
-   if(down) yInput += 1;
+   if(up) yInput += -5;
+   if(down) yInput += 5;
    return yInput;
 }
 
 int xInput(){
    int xInput = 0;
-   if(left) xInput += -1;
-   if(right) xInput += 1;
+   if(left) xInput += -5;
+   if(right) xInput += 5;
    return xInput;
 }
 
