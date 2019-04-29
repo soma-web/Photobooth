@@ -54,19 +54,26 @@ int xOffset;
 int yDead = 2000;
 int xDead = 2000;
 
-boolean joystickInput = true;
+boolean serialInput = true;
 
+//timer
+int millisSinceLastPicture = 0;
+
+//Photo
+public static int imageWidth = 100;
+public static int imageHeight = 100;
+   
 void setup(){  
-  size(900, 1000);
+  size(1500, 1000);
   
   currentX = width/2 - rectWidth/2;
   currentY = height/2 - rectHeight/2;
   
-  images = createGraphics(900, 1000);
-  triggeredImages = createGraphics(900, 1000);
-  squares = createGraphics(900, 1000);
-  photoCanvas = createGraphics(900, 1000);
-  triggerCanvas = createGraphics(900, 1000);
+  images = createGraphics(width, height);
+  triggeredImages = createGraphics(width, height);
+  squares = createGraphics(width, height);
+  photoCanvas = createGraphics(width, height);
+  triggerCanvas = createGraphics(width, height);
   
   frameRate(200);
    
@@ -86,9 +93,12 @@ void setup(){
   currentColor = color(255,255,255); //<>//
   background(color(255,255, 255));
   
-   printArray(Serial.list());
-   mySerial = new Serial(this, Serial.list()[1], 38400);
-   mySerial.bufferUntil(10);
+  if(serialInput)
+  {
+     printArray(Serial.list());
+     mySerial = new Serial(this, Serial.list()[1], 38400);
+     mySerial.bufferUntil(10);
+  }
 }
 
 void setupAudio(){ 
@@ -124,6 +134,7 @@ void setupCamera(){
 }
 
 void draw(){
+  if(millis() < 2000) return;
   drawTriggerCanvas();
   checkAreas();
   drawSquares(sensorInput.x, sensorInput.y, steeringSensitivity);
@@ -142,6 +153,44 @@ void draw(){
     //triggeredImages.background(255, 255, 255, 0);  
     firstFrame = false;
   }
+  
+  photoTick();
+}
+int lastTick = 0;
+void photoTick(){
+  int delta =  millis() - lastTick;
+  
+  millisSinceLastPicture += delta;
+  
+  if(millisSinceLastPicture > 1000){
+     pictureTick(); 
+     millisSinceLastPicture = 0;
+  }
+  lastTick = millis();
+}
+
+int currentPhotoX = -1;
+int currentPhotoY = 0;
+void pictureTick(){
+   int maxX = width / imageWidth - 1;
+   int maxY = height / imageHeight - 1;
+   
+   if(currentPhotoY == 0 && currentPhotoX < maxX){
+      currentPhotoX++;      
+   }else if(currentPhotoX == maxX && currentPhotoY < maxY){
+      currentPhotoY++; 
+   }else if(currentPhotoY == maxY && currentPhotoX > 0){
+      currentPhotoX--; 
+   }else if(currentPhotoX == 0 && currentPhotoY > 0){
+       currentPhotoY--;
+   }
+   
+   int x = imageWidth * currentPhotoX + 25;
+   int y = imageHeight * currentPhotoY + 25;
+   println("PhotoTick:"+ "max ("+ maxX + "," + maxY + ") " + currentPhotoX +"/" + currentPhotoY + " = "+ x + " " + y );
+   Photo p = new Photo(cam, x, y, currentColor);
+   photoList.add(p);
+   
 }
 
 void serialEvent(Serial s){  
@@ -491,15 +540,14 @@ public class Area
   }
 }
 
+
+
 public class Photo{
    int x;
    int y;
    PGraphics photo;
    color tintColor;
-   
-   int imageWidth = 150;
-   int imageHeight = 150;
-   
+
    public Photo(Capture cam, int x, int y, color tintColor){
       this.x = x;
       this.y = y;
@@ -518,7 +566,7 @@ public class Photo{
       if (g > 255) g = 255;
       if (b < 0) b = 0;
       if (b > 255) b = 255;
-       println(r + " " + g + " " + b);
+       //println(r + " " + g + " " + b);
       this.tintColor = color(r, g, b);
       photo = createGraphics(imageWidth, imageHeight);
       photo.beginDraw();
