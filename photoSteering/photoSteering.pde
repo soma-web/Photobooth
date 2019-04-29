@@ -79,7 +79,8 @@ void setup(){
    
   setupCamera();
   setupAudio();
-  
+  //removed cause we do not want any trigger
+  /*
   for(int x = 0; x < width; x += 100){
      for(int y = 0; y < height; y+= 100){
         areaList.add(new Area(x,y,rectWidth, rectHeight)); 
@@ -88,7 +89,7 @@ void setup(){
   
   areaList = shuffle(areaList);
   areaList = new ArrayList(areaList.subList(0, 20));
-
+*/
   
   currentColor = color(255,255,255); //<>//
   background(color(255,255, 255));
