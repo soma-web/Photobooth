@@ -22,7 +22,7 @@ import javax.print.attribute.standard.Copies;
 //CONFIGS
 //
 //defines weather a serial Joystick is attached
-boolean serialInput = true;
+boolean serialInput = false;
 //defines the serial port on which the serial joystick is attached
 int serialPortNumber = 7;
 
@@ -91,30 +91,37 @@ int currentPhotoX = -1;
 int currentPhotoY = 0;
 boolean completeRound = false;
 
+//triggerColor
+color triggerColorCenter = color(192,85,140);
+color triggerColorOuter = color(188,130,160);
+
+color background = color(255, 220, 120);
+
 //Logo
 PImage logoPixelWerkstatt;
-
+ //<>//
    
 void setup(){  
   size(1500, 1000);
   
   currentX = width/2 - rectWidth/2;
-  currentY = height/2 - rectHeight/2; //<>// //<>//
+  currentY = height/2 - rectHeight/2; //<>//
  //<>// //<>//
   squares = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
-  triggerCanvas = createGraphics(width, height);
-  logoCanvas =  createGraphics(width, height);
-  
+  //triggerCanvas = createGraphics(width, height);
+  triggerCanvas = squares;
+  logoCanvas =  createGraphics(width, height); //<>//
+   //<>//
   frameRate(200);
    
   setupCamera();
   audioInterface = new AudioInterface();
   //removed cause we do not want any trigger
-  generateTrigger(); //<>// //<>//
-   //<>// //<>// //<>//
+  generateTrigger(); //<>//
+   //<>// //<>//
   currentColor = color(255,255,255); //<>// //<>//
-  background(color(255,255, 255));
+  background(background);
   
   if(serialInput)
   {
@@ -128,14 +135,13 @@ void setup(){
 
 void generateTrigger()
 {
-    for(int x = 0; x < width; x += 100){
-     for(int y = 0; y < height; y+= 100){       
+    for(int x = 150; x < width - 150; x += 100){
+     for(int y = 150; y < height - 150; y+= 100){       
         areaList.add(new Area(x,y,rectWidth, rectHeight)); 
      }
   }
   
   areaList = shuffle(areaList);
-  areaList = new ArrayList(areaList.subList(0, 20));
 }
 
 void setupCamera(){
@@ -226,18 +232,22 @@ void OnPhotoSeriesFinished(){
   println("finished");
 }
 
-//caled every time a serial messages arrives
+//caled every time a serial messages arrives //<>//
 void serialEvent(Serial s){  
   sensorInput = sensorInput.ReadInput(s.readString());
 }
 
 void drawTriggerCanvas(){
-   triggerCanvas.beginDraw(); //<>// //<>//
+   triggerCanvas.beginDraw(); //<>//
+   /*
    for(int i = 0; i < areaList.size(); i++){ //<>// //<>//
      Area a = areaList.get(i);
      triggerCanvas.noStroke();
      a.draw(triggerCanvas, color(16,125,172), color(24,154,211));
    }
+   */
+   triggerCanvas.noStroke();
+   areaList.get(0).draw(triggerCanvas, triggerColorCenter, triggerColorOuter);
    triggerCanvas.endDraw();
    image(triggerCanvas, 0, 0);
 }
@@ -245,13 +255,12 @@ void drawTriggerCanvas(){
 //checks weather the player hits a trigger
 void checkAreas(){
   Area area = null;
-   for(int i = 0; i < areaList.size(); i++){
-      Area a = areaList.get(i);
+   //for(int i = 0; i < areaList.size(); i++){
+      Area a = areaList.get(0);
       if(a.contains((int)(currentX + rectWidth), (int)(currentY + rectHeight))){
         area = a;
-        break;
       }
-   }
+   //}
    
    if(area != null){
      areaList.remove(area);
@@ -266,10 +275,10 @@ void checkAreas(){
 void OnTriggerEnter(Area triggerArea)
 {
   println("trigger enter");
-    
+
     int tempObject = this.playerObject;
     while( tempObject == this.playerObject ){
-      this.playerObject = (int)random(1,3);
+      this.playerObject = (int)random(1,3); //<>//
     }
     this.steeringSensitivity += 0.0005;
     println("Intensity: " + this.steeringSensitivity);
@@ -278,7 +287,7 @@ void OnTriggerEnter(Area triggerArea)
 
 //draws the triggered photos
 void drawPhotoCanvas()                                    
-{ //<>// //<>//
+{ //<>//
   photoCanvas.beginDraw();
   if(keyCode == TAB){
     print("triggerered");
@@ -318,7 +327,7 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   currentY += moveY;
   currentY = constrain(currentY,0,height - rectHeight);
   currentColor = randomGausColor(currentColor);
-  
+   //<>//
   squares.stroke(currentColor);
   squares.fill(currentColor);
   
@@ -327,7 +336,7 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
     squares.rect(random(currentX, currentX + 30), random(currentY, currentY + 30), random(10, rectWidth + 20), random(10, rectHeight + 20));
   }
   if ( playerObject == 2 ){ //<>//
-    int eWidth = (int)random(rectWidth, rectWidth + 20); //<>//
+    int eWidth = (int)random(rectWidth, rectWidth + 20);
     int eHeight = (int) random(rectHeight, rectHeight + 20);
     squares.ellipse (currentX + eWidth/4 , currentY + eHeight/4, eWidth, eHeight); 
   }
