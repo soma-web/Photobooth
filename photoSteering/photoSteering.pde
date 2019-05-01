@@ -252,8 +252,14 @@ void checkAreas(){
 void OnTriggerEnter(Area triggerArea)
 {
   println("trigger enter");
-    this.playerObject = (int)random(1,4);
+    
+    int tempObject = this.playerObject;
+    while( tempObject == this.playerObject ){
+      this.playerObject = (int)random(1,4);
+    }
+    
     println("Switch to: " + this.playerObject);
+    
 }
 
 //draws the triggered photos
