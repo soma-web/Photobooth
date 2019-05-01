@@ -8,9 +8,9 @@ import processing.serial.*;
 //CONFIGS
 //
 //defines weather a serial Joystick is attached
-boolean serialInput = false;
+boolean serialInput = true;
 //defines the serial port on which the serial joystick is attached
-int serialPortNumber = 1;
+int serialPortNumber = 7;
 
 //Photo values
 public static int imageWidth = 100;
@@ -91,7 +91,7 @@ void setup(){
   audioInterface = new AudioInterface();
   //removed cause we do not want any trigger
   generateTrigger();
-  
+   //<>//
   currentColor = color(255,255,255); //<>//
   background(color(255,255, 255));
   
@@ -286,7 +286,7 @@ color randomGausColor(color c){
   float r = (c >> 16) & 0xFF;  // Faster way of getting red(argb)
   float g = (c >> 8) & 0xFF;   // Faster way of getting green(argb)
   float b = c & 0xFF;          // Faster way of getting blue(argb)
-  
+   //<>//
   r +=int(randomGaussian()*5);
   g+=int(randomGaussian()*5);
   b+=int(randomGaussian()*5);
