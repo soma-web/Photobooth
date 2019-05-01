@@ -60,6 +60,7 @@ ArrayList<Area> areaList = new ArrayList<Area>();
 PGraphics squares;
 PGraphics photoCanvas;
 PGraphics triggerCanvas;
+PGraphics logoCanvas;
 
 boolean firstFrame = true;
 color currentColor;
@@ -74,6 +75,10 @@ int lastTick = 0;
 int currentPhotoX = -1;
 int currentPhotoY = 0;
 boolean completeRound = false;
+
+//Logo
+PImage logoPixelWerkstatt;
+
    
 void setup(){  
   size(1500, 1000);
@@ -84,6 +89,7 @@ void setup(){
   squares = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
   triggerCanvas = createGraphics(width, height);
+  logoCanvas =  createGraphics(width, height);
   
   frameRate(200);
    
@@ -101,6 +107,8 @@ void setup(){
      mySerial = new Serial(this, Serial.list()[serialPortNumber], 38400);
      mySerial.bufferUntil(10);
   }
+  
+  logoPixelWerkstatt = loadImage("");:
 }
 
 void generateTrigger()
@@ -139,10 +147,20 @@ void draw(){
     squares.background(125, 125,0, 0);
     photoCanvas.background(125, 125,0, 0);
     triggerCanvas.background(125, 125,0, 0);
+    logoCanvas.background(125, 125,0, 0);
     firstFrame = false;
   }
   
   photoTick();
+  drawLogo();
+}
+
+void drawLogo()
+{
+  logoCanvas.beginDraw();
+  
+  logoCanvas.endDraw();
+  image(logoCanvas, 0, 0);
 }
 
 //the clock for the pixtures taken around the frame
