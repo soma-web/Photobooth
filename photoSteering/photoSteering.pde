@@ -258,8 +258,10 @@ void OnTriggerEnter(Area triggerArea)
       this.playerObject = (int)random(1,4);
     }
     
-    println("Switch to: " + this.playerObject);
     
+    
+    this.steeringSensitivity += 0.002;
+    println("Intensity: " + this.steeringSensitivity);
 }
 
 //draws the triggered photos
