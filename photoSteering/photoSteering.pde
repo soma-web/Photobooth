@@ -261,8 +261,8 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   if(abs(tmpInputY) > yDead){
      moveY =  tmpInputY * steeringSensitivity;
   }
-  println("Input: (" + inputX + "," + inputY + ") " + " Move: (" + moveX +"," + moveY + ") "); 
-  println(inputX + " ; " + tmpInputX + " : " + moveX + " is bigger than dead? " + (abs(tmpInputX) > xDead) + " " + xDead); 
+  //println("Input: (" + inputX + "," + inputY + ") " + " Move: (" + moveX +"," + moveY + ") "); 
+
   currentX += moveX;
   currentX = constrain(currentX, 0, width - rectWidth);
   currentY += moveY;
@@ -271,7 +271,7 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   
   squares.stroke(currentColor);
   squares.fill(currentColor);
- // print(strokeColor);
+
    
   squares.rect(currentX, currentY, rectWidth, rectHeight);
   squares.endDraw();
@@ -544,6 +544,6 @@ public class SensorInput{
 }
  
  public void print(){
-    //println("x: " + x + ", " + y);
+    println("x: " + x + ", " + y);
  }
 }
