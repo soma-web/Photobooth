@@ -240,9 +240,17 @@ void checkAreas(){
    
    if(area != null){
      areaList.remove(area);
-     Photo img = new Photo( cam,  area.x,  area.y,  currentColor);
-     photoList.add(img);
+     //
+     // Photo img = new Photo( cam,  area.x,  area.y,  currentColor);
+     // photoList.add(img);
+     
+     OnTriggerEnter(area);
    }
+}
+
+void OnTriggerEnter(Area triggerArea)
+{
+  println("trigger enter");
 }
 
 //draws the triggered photos
