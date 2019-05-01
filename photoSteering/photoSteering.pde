@@ -22,9 +22,9 @@ import javax.print.attribute.standard.Copies;
 //CONFIGS
 //
 //defines weather a serial Joystick is attached
-boolean serialInput = false;
+boolean serialInput = true;
 //defines the serial port on which the serial joystick is attached
-int serialPortNumber = 7;
+int serialPortNumber = 1;
 
 //Photo values
 public static int imageWidth = 100;
@@ -280,7 +280,7 @@ void OnTriggerEnter(Area triggerArea)
     while( tempObject == this.playerObject ){
       this.playerObject = (int)random(1,3); //<>//
     }
-    this.steeringSensitivity += 0.0005;
+    //this.steeringSensitivity += 0.0005;
     println("Intensity: " + this.steeringSensitivity);
     
 }
