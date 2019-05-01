@@ -50,7 +50,7 @@ color fore = color(255, 102, 204);
 color back = color(0,0,0);
 
 int x = 0;
-int y = 0;
+int y = 0;  
 
 float currentX = 10;
 float currentY = -10;
@@ -99,7 +99,7 @@ void setup(){
   size(1500, 1000);
   
   currentX = width/2 - rectWidth/2;
-  currentY = height/2 - rectHeight/2;
+  currentY = height/2 - rectHeight/2; //<>//
  //<>// //<>//
   squares = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
@@ -111,8 +111,8 @@ void setup(){
   setupCamera();
   audioInterface = new AudioInterface();
   //removed cause we do not want any trigger
-  generateTrigger();
-   //<>//
+  generateTrigger(); //<>//
+   //<>// //<>//
   currentColor = color(255,255,255); //<>// //<>//
   background(color(255,255, 255));
   
@@ -145,7 +145,7 @@ void setupCamera(){
 
 void draw(){
   if(millis() < 2000) return;
-  drawTriggerCanvas();
+  
   checkAreas();
   if(serialInput) 
   {
@@ -158,7 +158,7 @@ void draw(){
  
   drawPhotoCanvas();
   drawLogo();
-  
+  drawTriggerCanvas();
   if(firstFrame){
     squares.background(125, 125,0, 0);
     photoCanvas.background(125, 125,0, 0);
@@ -232,7 +232,7 @@ void serialEvent(Serial s){
 }
 
 void drawTriggerCanvas(){
-   triggerCanvas.beginDraw();
+   triggerCanvas.beginDraw(); //<>//
    for(int i = 0; i < areaList.size(); i++){ //<>// //<>//
      Area a = areaList.get(i);
      triggerCanvas.noStroke();
@@ -247,7 +247,7 @@ void checkAreas(){
   Area area = null;
    for(int i = 0; i < areaList.size(); i++){
       Area a = areaList.get(i);
-      if(a.contains((int)(currentX + rectWidth/2), (int)(currentY + rectHeight/2))){
+      if(a.contains((int)(currentX + rectWidth), (int)(currentY + rectHeight))){
         area = a;
         break;
       }
@@ -270,17 +270,15 @@ void OnTriggerEnter(Area triggerArea)
     int tempObject = this.playerObject;
     while( tempObject == this.playerObject ){
       this.playerObject = (int)random(1,4);
-    }
-    
-    
-    
-    this.steeringSensitivity += 0.002;
+    }    
+   
     println("Intensity: " + this.steeringSensitivity);
+    
 }
 
 //draws the triggered photos
 void drawPhotoCanvas()                                    
-{
+{ //<>//
   photoCanvas.beginDraw();
   if(keyCode == TAB){
     print("triggerered");
@@ -329,11 +327,14 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
     squares.rect(currentX, currentY, rectWidth, rectHeight);
   }
   
-  if ( playerObject == 2 ){
-    squares.ellipse (currentX, currentY, random(rectWidth, rectWidth + 20), random(rectHeight, rectHeight + 20)); 
+  if ( playerObject == 2 ){ //<>//
+    int eWidth = (int)random(rectWidth, rectWidth + 20);
+    int eHeight = (int) random(rectHeight, rectHeight + 20);
+    squares.ellipse (currentX + eWidth/4 , currentY + eHeight/4, eWidth, eHeight); 
   }
   
   if ( playerObject == 3){
+    
     squares.triangle(currentX, currentY, currentX + random(28, 60), currentY - random(5, 45), currentX + random(30, 70), currentY);
   }
     
