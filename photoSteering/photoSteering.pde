@@ -22,7 +22,7 @@ import javax.print.attribute.standard.Copies;
 //CONFIGS
 //
 //defines weather a serial Joystick is attached
-boolean serialInput = false;
+boolean serialInput = true;
 //defines the serial port on which the serial joystick is attached
 int serialPortNumber = 7;
 
@@ -99,7 +99,7 @@ void setup(){
   size(1500, 1000);
   
   currentX = width/2 - rectWidth/2;
-  currentY = height/2 - rectHeight/2; //<>//
+  currentY = height/2 - rectHeight/2; //<>// //<>//
  //<>// //<>//
   squares = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
@@ -111,8 +111,8 @@ void setup(){
   setupCamera();
   audioInterface = new AudioInterface();
   //removed cause we do not want any trigger
-  generateTrigger(); //<>//
-   //<>// //<>//
+  generateTrigger(); //<>// //<>//
+   //<>// //<>// //<>//
   currentColor = color(255,255,255); //<>// //<>//
   background(color(255,255, 255));
   
@@ -232,7 +232,7 @@ void serialEvent(Serial s){
 }
 
 void drawTriggerCanvas(){
-   triggerCanvas.beginDraw(); //<>//
+   triggerCanvas.beginDraw(); //<>// //<>//
    for(int i = 0; i < areaList.size(); i++){ //<>// //<>//
      Area a = areaList.get(i);
      triggerCanvas.noStroke();
@@ -269,16 +269,16 @@ void OnTriggerEnter(Area triggerArea)
     
     int tempObject = this.playerObject;
     while( tempObject == this.playerObject ){
-      this.playerObject = (int)random(1,4);
-    }    
-   
+      this.playerObject = (int)random(1,3);
+    }
+    this.steeringSensitivity += 0.0005;
     println("Intensity: " + this.steeringSensitivity);
     
 }
 
 //draws the triggered photos
 void drawPhotoCanvas()                                    
-{ //<>//
+{ //<>// //<>//
   photoCanvas.beginDraw();
   if(keyCode == TAB){
     print("triggerered");
@@ -324,18 +324,15 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   
  
   if ( playerObject == 1 ){
-    squares.rect(currentX, currentY, rectWidth, rectHeight);
+    squares.rect(random(currentX, currentX + 30), random(currentY, currentY + 30), random(10, rectWidth + 20), random(10, rectHeight + 20));
   }
-  
   if ( playerObject == 2 ){ //<>//
-    int eWidth = (int)random(rectWidth, rectWidth + 20);
+    int eWidth = (int)random(rectWidth, rectWidth + 20); //<>//
     int eHeight = (int) random(rectHeight, rectHeight + 20);
     squares.ellipse (currentX + eWidth/4 , currentY + eHeight/4, eWidth, eHeight); 
   }
-  
   if ( playerObject == 3){
-    
-    squares.triangle(currentX, currentY, currentX + random(28, 60), currentY - random(5, 45), currentX + random(30, 70), currentY);
+    squares.triangle(random(currentX, currentX + 20), random(currentY, currentY + 20), currentX + random(10, 40), currentY - random(5, 45), currentX + random(10, 40), random(5, currentY + 20));
   }
     
   squares.endDraw();
