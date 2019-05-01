@@ -4,6 +4,20 @@ import java.util.Collections;
 import beads.*;
 import processing.serial.*;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+
+import javax.print.Doc;
+import javax.print.DocFlavor;
+import javax.print.DocPrintJob;
+import javax.print.PrintException;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
+import javax.print.SimpleDoc;
+import javax.print.attribute.HashPrintRequestAttributeSet;
+import javax.print.attribute.PrintRequestAttributeSet;
+import javax.print.attribute.standard.Copies;
+
 //
 //CONFIGS
 //
@@ -389,11 +403,19 @@ void keyPressed()
   }
   
   if(keyCode == 50){
+    println("50 pressed");
     savePath();
   }
   
   if(keyCode == 51){
+    println("51 pressed");
     savePhotos();
+  }
+  
+  if(keyCode == 52){
+    println("52 pressed");
+    String imgPath = saveComposition();
+    printComposition(imgPath);
   }
   
   if(keyCode == CONTROL)
@@ -424,8 +446,22 @@ void CalibrateJoystick()
 }
 
 
-void saveComposition(){
-   saveFrame("shots/safe_" +millis()+".png");
+String saveComposition(){
+  String path = "shots/safe_" +millis()+".png";
+ 
+   saveFrame(path);
+   return path;
+}
+
+void printComposition(String imagePath){
+   try {
+    println("printing: " + imagePath);
+    launch("i_view64 " + imagePath + " /print=\"EPSON5923F9 (ET-2750 Series)\"");
+  } 
+  catch (Exception e) {
+    e.printStackTrace();
+    println("error " + e);
+  }
 }
 
 void savePath(){
