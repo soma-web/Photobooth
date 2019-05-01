@@ -8,7 +8,7 @@ import processing.serial.*;
 //CONFIGS
 //
 //defines weather a serial Joystick is attached
-boolean serialInput = true;
+boolean serialInput = false;
 //defines the serial port on which the serial joystick is attached
 int serialPortNumber = 7;
 
@@ -85,7 +85,7 @@ void setup(){
   
   currentX = width/2 - rectWidth/2;
   currentY = height/2 - rectHeight/2;
- //<>//
+ //<>// //<>//
   squares = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
   triggerCanvas = createGraphics(width, height);
@@ -98,7 +98,7 @@ void setup(){
   //removed cause we do not want any trigger
   generateTrigger();
    //<>//
-  currentColor = color(255,255,255); //<>//
+  currentColor = color(255,255,255); //<>// //<>//
   background(color(255,255, 255));
   
   if(serialInput)
@@ -108,7 +108,7 @@ void setup(){
      mySerial.bufferUntil(10);
   }
   
-  logoPixelWerkstatt = loadImage("");:
+  logoPixelWerkstatt = loadImage("images/pixel_logo.png");
 }
 
 void generateTrigger()
@@ -142,6 +142,7 @@ void draw(){
   }
  
   drawPhotoCanvas();
+  drawLogo();
   
   if(firstFrame){
     squares.background(125, 125,0, 0);
@@ -152,13 +153,13 @@ void draw(){
   }
   
   photoTick();
-  drawLogo();
+
 }
 
 void drawLogo()
 {
   logoCanvas.beginDraw();
-  
+  logoCanvas.image(logoPixelWerkstatt, width - imageWidth, height - imageHeight, imageWidth, imageHeight);
   logoCanvas.endDraw();
   image(logoCanvas, 0, 0);
 }
@@ -217,7 +218,7 @@ void serialEvent(Serial s){
 
 void drawTriggerCanvas(){
    triggerCanvas.beginDraw();
-   for(int i = 0; i < areaList.size(); i++){ //<>//
+   for(int i = 0; i < areaList.size(); i++){ //<>// //<>//
      Area a = areaList.get(i);
      triggerCanvas.noStroke();
      a.draw(triggerCanvas, color(16,125,172), color(24,154,211));
@@ -255,7 +256,7 @@ void drawPhotoCanvas()
   }
   
     for(int i = 0; i < photoList.size(); i++){
-     Photo img = photoList.get(i); //<>//
+     Photo img = photoList.get(i); //<>// //<>//
      img.drawImage(photoCanvas);
   }
   photoCanvas.endDraw();
