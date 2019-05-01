@@ -65,6 +65,7 @@ boolean triggerPhoto;
 //Player rect
 int rectWidth = 50;
 int rectHeight = 50;
+int playerObject = 1;
 
 ArrayList<Photo> photoList = new ArrayList<Photo>();
 ArrayList<Area> areaList = new ArrayList<Area>();
@@ -265,6 +266,16 @@ void checkAreas(){
 void OnTriggerEnter(Area triggerArea)
 {
   println("trigger enter");
+    
+    int tempObject = this.playerObject;
+    while( tempObject == this.playerObject ){
+      this.playerObject = (int)random(1,4);
+    }
+    
+    
+    
+    this.steeringSensitivity += 0.002;
+    println("Intensity: " + this.steeringSensitivity);
 }
 
 //draws the triggered photos
@@ -312,9 +323,20 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   
   squares.stroke(currentColor);
   squares.fill(currentColor);
-
-   
-  squares.rect(currentX, currentY, rectWidth, rectHeight);
+  
+ 
+  if ( playerObject == 1 ){
+    squares.rect(currentX, currentY, rectWidth, rectHeight);
+  }
+  
+  if ( playerObject == 2 ){
+    squares.ellipse (currentX, currentY, random(rectWidth, rectWidth + 20), random(rectHeight, rectHeight + 20)); 
+  }
+  
+  if ( playerObject == 3){
+    squares.triangle(currentX, currentY, currentX + random(28, 60), currentY - random(5, 45), currentX + random(30, 70), currentY);
+  }
+    
   squares.endDraw();
   
   image(squares, 0, 0);
