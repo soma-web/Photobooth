@@ -308,11 +308,11 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   }
   
   if ( playerObject == 2 ){
-    squares.ellipse (currentX, currentY, rectWidth, rectHeight); 
+    squares.ellipse (currentX, currentY, random(rectWidth, rectWidth + 20), random(rectHeight, rectHeight + 20)); 
   }
   
   if ( playerObject == 3){
-    squares.triangle(currentX, currentY, currentX + 28, currentY -15, currentX + 40, currentY);
+    squares.triangle(currentX, currentY, currentX + random(28, 60), currentY - random(5, 45), currentX + random(30, 70), currentY);
   }
     
   squares.endDraw();
