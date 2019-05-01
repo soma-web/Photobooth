@@ -4,8 +4,31 @@ import java.util.Collections;
 import beads.*;
 import processing.serial.*;
 
-Capture cam;
-PImage image;
+//
+//CONFIGS
+//
+//defines weather a serial Joystick is attached
+boolean serialInput = false;
+//defines the serial port on which the serial joystick is attached
+int serialPortNumber = 1;
+
+//Photo values
+public static int imageWidth = 100;
+public static int imageHeight = 100;
+
+//Joystick Porperties
+SensorInput sensorInput = new SensorInput();
+float steeringSensitivity = 0.0005;
+int yOffset;
+int xOffset;
+int yDead = 2000;
+int xDead = 2000;
+
+//END CONFIGS
+
+
+private Capture cam;
+private AudioInterface audioInterface;
 
 AudioContext ac;
 Glide carrierFreq, modFreqRatio;
@@ -14,7 +37,6 @@ color back = color(0,0,0);
 
 int x = 0;
 int y = 0;
-int imageSize = 50;
 
 float currentX = 10;
 float currentY = -10;
@@ -26,51 +48,39 @@ boolean down;
 
 boolean triggerPhoto;
 
+//Player rect
 int rectWidth = 50;
 int rectHeight = 50;
 
 ArrayList<Photo> photoList = new ArrayList<Photo>();
 ArrayList<Area> areaList = new ArrayList<Area>();
 
-PGraphics images;
+//Different graphic layers we are drawing the objects on
+
 PGraphics squares;
-PGraphics triggeredImages;
 PGraphics photoCanvas;
 PGraphics triggerCanvas;
 
 boolean firstFrame = true;
-
 color currentColor;
 
 //Serial port poroperties
 Serial mySerial;
 boolean serailInitiliazied = false;
 
-//Joystick Porperties
-SensorInput sensorInput = new SensorInput();
-float steeringSensitivity = 0.0005;
-int yOffset;
-int xOffset;
-int yDead = 2000;
-int xDead = 2000;
-
-boolean serialInput = true;
-
-//timer
+//timer for phtotTicks
 int millisSinceLastPicture = 0;
-
-//Photo
-public static int imageWidth = 100;
-public static int imageHeight = 100;
+int lastTick = 0;
+int currentPhotoX = -1;
+int currentPhotoY = 0;
+boolean completeRound = false;
    
 void setup(){  
   size(1500, 1000);
   
   currentX = width/2 - rectWidth/2;
   currentY = height/2 - rectHeight/2;
-  
-  images = createGraphics(width, height);
-  triggeredImages = createGraphics(width, height);
+ //<>//
   squares = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
   triggerCanvas = createGraphics(width, height);
@@ -78,18 +88,9 @@ void setup(){
   frameRate(200);
    
   setupCamera();
-  setupAudio();
+  audioInterface = new AudioInterface();
   //removed cause we do not want any trigger
-  /*
-  for(int x = 0; x < width; x += 100){
-     for(int y = 0; y < height; y+= 100){
-        areaList.add(new Area(x,y,rectWidth, rectHeight)); 
-     }
-  }
-  
-  areaList = shuffle(areaList);
-  areaList = new ArrayList(areaList.subList(0, 20));
-*/
+  generateTrigger();
   
   currentColor = color(255,255,255); //<>//
   background(color(255,255, 255));
@@ -97,37 +98,22 @@ void setup(){
   if(serialInput)
   {
      printArray(Serial.list());
-     mySerial = new Serial(this, Serial.list()[1], 38400);
+     mySerial = new Serial(this, Serial.list()[serialPortNumber], 38400);
      mySerial.bufferUntil(10);
   }
 }
 
-void setupAudio(){ 
-  ac = new AudioContext();
-  /*
-   * This is a copy of Lesson 3 with some mouse control.
-   */
-   //this time we use the Glide object because it smooths the mouse input.
-  carrierFreq = new Glide(ac, 500);
-  modFreqRatio = new Glide(ac, 1);
-  Function modFreq = new Function(carrierFreq, modFreqRatio) {
-    public float calculate() {
-      return x[0] * x[1];
-    }
-  };
-  WavePlayer freqModulator = new WavePlayer(ac, modFreq, Buffer.SINE);
-  Function carrierMod = new Function(freqModulator, carrierFreq) {
-    public float calculate() {
-      return x[0] * 400.0 + x[1];    
-    }
-  };
-  WavePlayer wp = new WavePlayer(ac, carrierMod, Buffer.SINE);
-  Gain g = new Gain(ac, 1, 0.1);
-  g.addInput(wp);
-  ac.out.addInput(g);
-  ac.start(); 
+void generateTrigger()
+{
+    for(int x = 0; x < width; x += 100){
+     for(int y = 0; y < height; y+= 100){       
+        areaList.add(new Area(x,y,rectWidth, rectHeight)); 
+     }
+  }
+  
+  areaList = shuffle(areaList);
+  areaList = new ArrayList(areaList.subList(0, 20));
 }
-
 
 void setupCamera(){
   cam = new Capture(this, 640, 480);
@@ -138,26 +124,28 @@ void draw(){
   if(millis() < 2000) return;
   drawTriggerCanvas();
   checkAreas();
-  drawSquares(sensorInput.x, sensorInput.y, steeringSensitivity);
+  if(serialInput) 
+  {
+     drawSquares(sensorInput.x, sensorInput.y, steeringSensitivity, xDead, yDead, xOffset, yOffset);
+     audioInterface.makeSound(sensorInput.x / 10,sensorInput.y / 10);
+  }else{
+     drawSquares(xInput(), yInput(), 1,0,0,0,0); 
+     audioInterface.makeSound(xInput() / 10, yInput() / 10);
+  }
+ 
   drawPhotoCanvas();
   
-  //drawImages();
-  //drawTriggeredImages();
-  
-  makeSound(sensorInput.x / 10,sensorInput.y / 10);
-  
   if(firstFrame){
-    //images.background(255, 255, 255, 0);
     squares.background(125, 125,0, 0);
     photoCanvas.background(125, 125,0, 0);
     triggerCanvas.background(125, 125,0, 0);
-    //triggeredImages.background(255, 255, 255, 0);  
     firstFrame = false;
   }
   
   photoTick();
 }
-int lastTick = 0;
+
+//the clock for the pixtures taken around the frame
 void photoTick(){
   int delta =  millis() - lastTick;
   
@@ -170,8 +158,7 @@ void photoTick(){
   lastTick = millis();
 }
 
-int currentPhotoX = -1;
-int currentPhotoY = 0;
+//takes a photo every tick and places is around the frame
 void pictureTick(){
    int maxX = width / imageWidth - 1;
    int maxY = height / imageHeight - 1;
@@ -184,81 +171,44 @@ void pictureTick(){
       currentPhotoX--; 
    }else if(currentPhotoX == 0 && currentPhotoY > 0){
        currentPhotoY--;
+       if(currentPhotoY == 0) completeRound = true;
    }
    
+   if(currentPhotoX == 0 && currentPhotoY == 0 && !completeRound) return;
    int x = imageWidth * currentPhotoX + 25;
    int y = imageHeight * currentPhotoY + 25;
-   println("PhotoTick:"+ "max ("+ maxX + "," + maxY + ") " + currentPhotoX +"/" + currentPhotoY + " = "+ x + " " + y );
+   //println("PhotoTick:"+ "max ("+ maxX + "," + maxY + ") " + currentPhotoX +"/" + currentPhotoY + " = "+ x + " " + y );
    Photo p = new Photo(cam, x, y, currentColor);
    photoList.add(p);
    
+    if(currentPhotoX == 0 && currentPhotoY == 0 && completeRound) 
+    {
+      OnPhotoSeriesFinished();  
+    }
 }
 
+//called once the frame is absolutely filled
+void OnPhotoSeriesFinished(){
+  println("finished");
+}
+
+//caled every time a serial messages arrives
 void serialEvent(Serial s){  
-  sensorInput = ReadInput(s.readString());
-}
-
-SensorInput ReadInput(String serialInput){
-   SensorInput input = new SensorInput();
-    if(serialInput != null){
-      //println(serialInput);
-       
-     try{
-       JSONObject json = parseJSONObject(serialInput);
-       if(json != null){
-         JSONArray accelerometerValues = json.getJSONArray("Accel");
-         JSONArray gyroscopeValues = json.getJSONArray("Gyro");
-         JSONObject angleValues = json.getJSONObject("Angle");
-         JSONArray usedValues = accelerometerValues;
-         
-         //println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
-        
-             
-         input.x = (usedValues.getInt(1));
-         input.y = (usedValues.getInt(2));
-         input.success = true;
-       }
-     }catch(RuntimeException e){
-      print("errror"); 
-     }
-   }else{
-    println("no input"); 
-   }
-   return input;
-}
-
-void makeSound(float inputX, float inputY){
-  //mouse listening code here
-  carrierFreq.setValue((float)inputX / width * 1000 + 50);
-  modFreqRatio.setValue((1 - (float)inputY / height) * 10 + 0.1);
+  sensorInput = sensorInput.ReadInput(s.readString());
 }
 
 void drawTriggerCanvas(){
    triggerCanvas.beginDraw();
-   for(int i = 0; i < areaList.size(); i++){
+   for(int i = 0; i < areaList.size(); i++){ //<>//
      Area a = areaList.get(i);
      triggerCanvas.noStroke();
-     drawGradient(triggerCanvas, a.x + 25, a.y + 25, color(16,125,172), color(24,154,211));
-     
-     //triggerCanvas.fill(color(37, 111, 249));
-     //triggerCanvas.ellipse(a.x + 25, a.y + 25, 50, 50);
+     a.draw(triggerCanvas, color(16,125,172), color(24,154,211));
    }
    triggerCanvas.endDraw();
    image(triggerCanvas, 0, 0);
 }
 
-void drawGradient(PGraphics target, float x, float y, color from, color to) {
-  int radius = 25;
-  float h = random(0, 360);
-  color current = to;
-  for (int r = radius; r > 0; --r) {
-    target.fill(current);
-    target.ellipse(x, y, r, r);
-    h = (h + 1) % 360;
-    current = lerpColor(from, to, float(r)/float(radius));
-  }
-}
-
+//checks weather the player hits a trigger
 void checkAreas(){
   Area area = null;
    for(int i = 0; i < areaList.size(); i++){
@@ -276,6 +226,7 @@ void checkAreas(){
    }
 }
 
+//draws the triggered photos
 void drawPhotoCanvas()                                    
 {
   photoCanvas.beginDraw();
@@ -293,8 +244,8 @@ void drawPhotoCanvas()
   image(photoCanvas, 0, 0);
 }
 
-
-void drawSquares(float inputX, float inputY, float steeringSensitivity){
+//draws the player
+void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDead, int yDead, int xOffset, int yOffset){
   squares.beginDraw(); 
 
   float moveX = 0;
@@ -302,7 +253,7 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity){
   
   float tmpInputX = (inputX + xOffset);
   float tmpInputY = (inputY + yOffset);
-  //println(inputY + " " + yOffset + " " + tmpInputY); 
+  
   if(abs(tmpInputX) > xDead){
     moveX = -1 * tmpInputX * steeringSensitivity;
   }
@@ -310,7 +261,8 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity){
   if(abs(tmpInputY) > yDead){
      moveY =  tmpInputY * steeringSensitivity;
   }
-  
+  println("Input: (" + inputX + "," + inputY + ") " + " Move: (" + moveX +"," + moveY + ") "); 
+  println(inputX + " ; " + tmpInputX + " : " + moveX + " is bigger than dead? " + (abs(tmpInputX) > xDead) + " " + xDead); 
   currentX += moveX;
   currentX = constrain(currentX, 0, width - rectWidth);
   currentY += moveY;
@@ -327,52 +279,6 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity){
   image(squares, 0, 0);
 }
 
-void drawImages(){
-  images.beginDraw(); 
-  cam.read();
-
-  color tintColor = squares.get(x,y);
-  images.tint(tintColor);
-
-  images.image(cam, x,y, imageSize, imageSize);
-  x+= imageSize;
-  
-  if(x >= width){
-   x = 0;
-   y+= imageSize;
-  }
-  
-  if(y >= height){
-     y = 0; 
-  }
-  images.endDraw();
-  image(images, 0, 0);
-}
-
-void drawTriggeredImages(){
-  triggeredImages.beginDraw();
-  
-  if(triggerPhoto)
-  {
-    cam.read();
-    print("trigger");
-// tintColor = color(125);
-    triggeredImages.tint(currentColor);
-    
-    int currentImageSize = 100;
-    
-    int x = (int)(currentX + rectWidth/2) - currentImageSize/2;
-    int y = (int)(currentY + rectHeight/2) - currentImageSize/2;
-    
-    
-    
-    triggeredImages.image(cam, x, y, currentImageSize, currentImageSize);
-    triggerPhoto = false;
-  }
-  
-  triggeredImages.endDraw();
-  image(triggeredImages, 0, 0);
-}
 
 ///shfting the color in a naural way around blue to get a nice gradient
 color randomGausColor(color c){
@@ -425,7 +331,6 @@ void keyReleased() {
   }
 }
 
-
 void keyPressed()
 {
   if(keyCode == UP)
@@ -470,13 +375,6 @@ void keyPressed()
   }
 }
 
-void CalibrateJoystick()
-{
-  println("Calibrating Joystick");
-  xOffset = -1 * (int)sensorInput.x;
-  yOffset = -1 * (int)sensorInput.y;
-}
-
 int yInput(){
    int yInput = 0;
    if(up) yInput += -5;
@@ -489,6 +387,13 @@ int xInput(){
    if(left) xInput += -5;
    if(right) xInput += 5;
    return xInput;
+}
+
+void CalibrateJoystick()
+{
+  println("Calibrating Joystick");
+  xOffset = -1 * (int)sensorInput.x;
+  yOffset = -1 * (int)sensorInput.y;
 }
 
 
@@ -538,6 +443,18 @@ public class Area
       conatins = true;
     }
     return conatins;
+  }
+  
+  void draw(PGraphics target, color from, color to) {
+    int radius = 25;
+    float h = random(0, 360);
+    color current = to;
+    for (int r = radius; r > 0; --r) {
+      target.fill(current);
+      target.ellipse(x, y, r, r);
+      h = (h + 1) % 360;
+      current = lerpColor(from, to, float(r)/float(radius));
+    }
   }
 }
 
@@ -593,6 +510,38 @@ public class SensorInput{
  public SensorInput(){
 
  }
+ 
+ public SensorInput ReadInput(String serialInput){ 
+     //reset all values cause we can not make sure the input is read correctly
+     success = false;
+     x = 0;
+     y = 0;
+    if(serialInput != null){
+      //println(serialInput);
+       
+     try{
+       JSONObject json = parseJSONObject(serialInput);
+       if(json != null){
+         JSONArray accelerometerValues = json.getJSONArray("Accel");
+         JSONArray gyroscopeValues = json.getJSONArray("Gyro");
+         JSONObject angleValues = json.getJSONObject("Angle");
+         JSONArray usedValues = accelerometerValues;
+         
+         //println(usedValues.getInt(0) + ", " + usedValues.getInt(1) + ", " + usedValues.getInt(2)); 
+        
+             
+         x = (usedValues.getInt(1));
+         y = (usedValues.getInt(2));
+         success = true;
+       }
+     }catch(RuntimeException e){
+      println("errror"); 
+     }
+   }else{
+    println("no input"); 
+   }
+   return this;
+}
  
  public void print(){
     //println("x: " + x + ", " + y);
