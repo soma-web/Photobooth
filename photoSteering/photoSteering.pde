@@ -22,7 +22,7 @@ import javax.print.attribute.standard.Copies;
 //CONFIGS
 //
 //defines weather a serial Joystick is attached
-boolean serialInput = true;
+boolean serialInput = false;
 //defines the serial port on which the serial joystick is attached
 int serialPortNumber = 1;
 
@@ -92,13 +92,16 @@ int currentPhotoY = 0;
 boolean completeRound = false;
 
 //triggerColor
-color triggerColorCenter = color(192,85,140);
-color triggerColorOuter = color(188,130,160);
+color triggerColorCenter = color(34,107,226);
+color triggerColorOuter = color(0,82,214);
 
-color background = color(255, 220, 120);
+color background = color(255, 255, 255);
 
 //Logo
 PImage logoPixelWerkstatt;
+
+boolean gameRunning = true;
+int playerScore = 0;
  //<>//
    
 void setup(){  
@@ -133,6 +136,11 @@ void setup(){
   logoPixelWerkstatt = loadImage("images/pixel_logo.png");
 }
 
+void startGame(){
+  playerScore = 0;
+  gameRunning = true;
+}
+
 void generateTrigger()
 {
     for(int x = 150; x < width - 150; x += 100){
@@ -151,7 +159,7 @@ void setupCamera(){
 
 void draw(){
   if(millis() < 2000) return;
-  
+  if(!gameRunning) return;
   checkAreas();
   if(serialInput) 
   {
@@ -230,6 +238,20 @@ void pictureTick(){
 //called once the frame is absolutely filled
 void OnPhotoSeriesFinished(){
   println("finished");
+
+  
+  squares.beginDraw();
+  PFont font = createFont("Arial Bold",32,true); // Arial, 16 point, anti-aliasing on
+  squares.fill(color(0,82,214));
+  squares.textFont(font, 32);
+  squares.text("Score: " + playerScore, imageWidth + 20, imageWidth + 35);
+  squares.endDraw();
+  image(squares, 0 , 0);
+  
+  draw();
+  
+  gameRunning = false;
+  saveComposition();
 }
 
 //caled every time a serial messages arrives //<>//
@@ -280,8 +302,7 @@ void OnTriggerEnter(Area triggerArea)
     while( tempObject == this.playerObject ){
       this.playerObject = (int)random(1,3); //<>//
     }
-    //this.steeringSensitivity += 0.0005;
-    println("Intensity: " + this.steeringSensitivity);
+    playerScore++;
     
 }
 
@@ -333,7 +354,8 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   
  
   if ( playerObject == 1 ){
-    squares.rect(random(currentX, currentX + 30), random(currentY, currentY + 30), random(10, rectWidth + 20), random(10, rectHeight + 20));
+    //squares.rect(currentX, currentY, random(rectWidth, rectWidth + 20), random(rectHeight, rectHeight + 20));
+    squares.rect(currentX, currentY, rectWidth, rectHeight);
   }
   if ( playerObject == 2 ){ //<>//
     int eWidth = (int)random(rectWidth, rectWidth + 20);
