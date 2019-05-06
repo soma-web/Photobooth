@@ -72,9 +72,8 @@ ArrayList<Area> areaList = new ArrayList<Area>();
 
 //Different graphic layers we are drawing the objects on
 
-PGraphics squares;
+PGraphics playerCanvas;
 PGraphics photoCanvas;
-PGraphics triggerCanvas;
 PGraphics logoCanvas;
 
 boolean firstFrame = true;
@@ -92,8 +91,8 @@ int currentPhotoY = 0;
 boolean completeRound = false;
 
 //triggerColor
-color triggerColorCenter = color(34,107,226);
-color triggerColorOuter = color(0,82,214);
+color triggerColorCenter = color(255,25,25);
+color triggerColorOuter = color(255,0,0);
 
 color background = color(255, 255, 255);
 
@@ -110,10 +109,10 @@ void setup(){
   currentX = width/2 - rectWidth/2;
   currentY = height/2 - rectHeight/2; //<>//
  //<>// //<>//
-  squares = createGraphics(width, height);
+  playerCanvas = createGraphics(width, height);
   photoCanvas = createGraphics(width, height);
   //triggerCanvas = createGraphics(width, height);
-  triggerCanvas = squares;
+  
   logoCanvas =  createGraphics(width, height); //<>//
    //<>//
   frameRate(200);
@@ -139,10 +138,37 @@ void setup(){
 void startGame(){
   playerScore = 0;
   gameRunning = true;
+  
+  photoList.clear();
+  generateTrigger();
+  
+  clearGraphics(playerCanvas);
+  clearGraphics(photoCanvas);
+  clearGraphics(logoCanvas);
+  clear();
+  background(background);
+
+  currentX = width/2 - rectWidth/2;
+  currentY = height/2 - rectHeight/2;
+  
+  
+  completeRound = false;
+  currentPhotoX =-1;
+  currentPhotoY = 0;
+}
+
+void clearGraphics(PGraphics pg){
+  pg.beginDraw();
+  
+  pg.endDraw();
+  pg.background(125, 125,0, 0);
+  pg.clear();
+  image(pg, 0 , 0);
 }
 
 void generateTrigger()
 {
+    areaList.clear();
     for(int x = 150; x < width - 150; x += 100){
      for(int y = 150; y < height - 150; y+= 100){       
         areaList.add(new Area(x,y,rectWidth, rectHeight)); 
@@ -163,20 +189,20 @@ void draw(){
   checkAreas();
   if(serialInput) 
   {
-     drawSquares(sensorInput.x, sensorInput.y, steeringSensitivity, xDead, yDead, xOffset, yOffset);
+     drawplayerCanvas(sensorInput.x, sensorInput.y, steeringSensitivity, xDead, yDead, xOffset, yOffset);
      audioInterface.makeSound(sensorInput.x / 10,sensorInput.y / 10);
   }else{
-     drawSquares(xInput(), yInput(), 1,0,0,0,0); 
+     drawplayerCanvas(xInput(), yInput(), 1,0,0,0,0); 
      audioInterface.makeSound(xInput() / 10, yInput() / 10);
   }
  
   drawPhotoCanvas();
   drawLogo();
-  drawTriggerCanvas();
+  drawTrigger();
   if(firstFrame){
-    squares.background(125, 125,0, 0);
+    playerCanvas.background(125, 125,0, 0);
     photoCanvas.background(125, 125,0, 0);
-    triggerCanvas.background(125, 125,0, 0);
+    playerCanvas.background(125, 125,0, 0);
     logoCanvas.background(125, 125,0, 0);
     firstFrame = false;
   }
@@ -240,13 +266,13 @@ void OnPhotoSeriesFinished(){
   println("finished");
 
   
-  squares.beginDraw();
+  playerCanvas.beginDraw();
   PFont font = createFont("Arial Bold",32,true); // Arial, 16 point, anti-aliasing on
-  squares.fill(color(0,82,214));
-  squares.textFont(font, 32);
-  squares.text("Score: " + playerScore, imageWidth + 20, imageWidth + 35);
-  squares.endDraw();
-  image(squares, 0 , 0);
+  playerCanvas.fill(color(0,82,214));
+  playerCanvas.textFont(font, 32);
+  playerCanvas.text("Score: " + playerScore, imageWidth + 20, imageWidth + 35);
+  playerCanvas.endDraw();
+  image(playerCanvas, 0 , 0);
   
   draw();
   
@@ -259,8 +285,8 @@ void serialEvent(Serial s){
   sensorInput = sensorInput.ReadInput(s.readString());
 }
 
-void drawTriggerCanvas(){
-   triggerCanvas.beginDraw(); //<>//
+void drawTrigger(){
+   playerCanvas.beginDraw(); //<>//
    /*
    for(int i = 0; i < areaList.size(); i++){ //<>// //<>//
      Area a = areaList.get(i);
@@ -268,10 +294,10 @@ void drawTriggerCanvas(){
      a.draw(triggerCanvas, color(16,125,172), color(24,154,211));
    }
    */
-   triggerCanvas.noStroke();
-   areaList.get(0).draw(triggerCanvas, triggerColorCenter, triggerColorOuter);
-   triggerCanvas.endDraw();
-   image(triggerCanvas, 0, 0);
+   playerCanvas.noStroke();
+   areaList.get(0).draw(playerCanvas, triggerColorCenter, triggerColorOuter);
+   playerCanvas.endDraw();
+   image(playerCanvas, 0, 0);
 }
 
 //checks weather the player hits a trigger
@@ -325,8 +351,8 @@ void drawPhotoCanvas()
 }
 
 //draws the player
-void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDead, int yDead, int xOffset, int yOffset){
-  squares.beginDraw(); 
+void drawplayerCanvas(float inputX, float inputY, float steeringSensitivity, int xDead, int yDead, int xOffset, int yOffset){
+  playerCanvas.beginDraw(); 
 
   float moveX = 0;
   float moveY = 0;
@@ -349,26 +375,26 @@ void drawSquares(float inputX, float inputY, float steeringSensitivity, int xDea
   currentY = constrain(currentY,0,height - rectHeight);
   currentColor = randomGausColor(currentColor);
    //<>//
-  squares.stroke(currentColor);
-  squares.fill(currentColor);
+  playerCanvas.stroke(currentColor);
+  playerCanvas.fill(currentColor);
   
  
   if ( playerObject == 1 ){
-    //squares.rect(currentX, currentY, random(rectWidth, rectWidth + 20), random(rectHeight, rectHeight + 20));
-    squares.rect(currentX, currentY, rectWidth, rectHeight);
+    //playerCanvas.rect(currentX, currentY, random(rectWidth, rectWidth + 20), random(rectHeight, rectHeight + 20));
+    playerCanvas.rect(currentX, currentY, rectWidth, rectHeight);
   }
   if ( playerObject == 2 ){ //<>//
     int eWidth = (int)random(rectWidth, rectWidth + 20);
     int eHeight = (int) random(rectHeight, rectHeight + 20);
-    squares.ellipse (currentX + eWidth/4 , currentY + eHeight/4, eWidth, eHeight); 
+    playerCanvas.ellipse (currentX + eWidth/4 , currentY + eHeight/4, eWidth, eHeight); 
   }
   if ( playerObject == 3){
-    squares.triangle(random(currentX, currentX + 20), random(currentY, currentY + 20), currentX + random(10, 40), currentY - random(5, 45), currentX + random(10, 40), random(5, currentY + 20));
+    playerCanvas.triangle(random(currentX, currentX + 20), random(currentY, currentY + 20), currentX + random(10, 40), currentY - random(5, 45), currentX + random(10, 40), random(5, currentY + 20));
   }
     
-  squares.endDraw();
+  playerCanvas.endDraw();
   
-  image(squares, 0, 0);
+  image(playerCanvas, 0, 0);
 }
 
 
@@ -469,6 +495,10 @@ void keyPressed()
     printComposition(imgPath);
   }
   
+  if(keyCode == 32){
+     startGame(); 
+  }
+  
   if(keyCode == CONTROL)
   {
     CalibrateJoystick();  
@@ -516,7 +546,7 @@ void printComposition(String imagePath){
 }
 
 void savePath(){
-  squares.save("shots/safe_squares.png");
+  playerCanvas.save("shots/safe_playerCanvas.png");
 }
 
 void savePhotos(){
